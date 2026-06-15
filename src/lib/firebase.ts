@@ -1,13 +1,20 @@
 import { initializeApp } from "firebase/app";
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
-import firebaseConfig from "../../firebase-applet-config.json";
-
+const firebaseConfig = {
+  apiKey: "AIzaSyBpELrE0g7AzilwHWe5qfY5urQmd-sRVGs",
+  authDomain: "watchvault-c1f4a.firebaseapp.com",
+  projectId: "watchvault-c1f4a",
+  storageBucket: "watchvault-c1f4a.firebasestorage.app",
+  messagingSenderId: "148118701809",
+  appId: "1:148118701809:web:e11b27e7c6314f22774b50",
+  measurementId: "G-MV9WBVE4FQ"
+};
 // Initialize Firebase App
 const app = initializeApp(firebaseConfig);
 
 // Initialize Services
-export const db = getFirestore(app, firebaseConfig.firestoreDatabaseId);
+export const db = getFirestore(app);
 export const auth = getAuth(app);
 export const googleProvider = new GoogleAuthProvider();
 
