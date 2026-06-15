@@ -1,0 +1,6 @@
+{
+  "name": "WatchVault",
+  "description": "A premium, unified watchlist application for tracking movies, TV series, and anime with full-featured dashboards, stats, and real-time syncing.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

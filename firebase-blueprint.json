@@ -1,0 +1,118 @@
+{
+  "entities": {
+    "User": {
+      "title": "User Profile",
+      "description": "Public and private profile preferences for a user",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "description": "Firebase Auth UID"
+        },
+        "displayName": {
+          "type": "string",
+          "description": "User's display name"
+        },
+        "email": {
+          "type": "string",
+          "description": "User's email address"
+        },
+        "photoURL": {
+          "type": "string",
+          "description": "URL of user photo or avatar"
+        },
+        "theme": {
+          "type": "string",
+          "enum": ["light", "dark"],
+          "description": "UI theme preference"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Time when the account was registered"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Time of last profile update"
+        }
+      },
+      "required": ["uid", "displayName", "email", "createdAt", "updatedAt"]
+    },
+    "WatchlistEntry": {
+      "title": "Watchlist Entry",
+      "description": "An entry in a user's watchlist tracking a movie, show, or anime",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique Firestore entry ID"
+        },
+        "externalId": {
+          "type": "string",
+          "description": "ID from external service (TMDB or Jikan)"
+        },
+        "type": {
+          "type": "string",
+          "enum": ["anime", "tv", "movie"],
+          "description": "Class of content being watched"
+        },
+        "title": {
+          "type": "string",
+          "description": "Title of the media"
+        },
+        "posterURL": {
+          "type": "string",
+          "description": "Poster thumbnail image URL"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["planning", "watching", "paused", "completed", "dropped"],
+          "description": "User watch progress status"
+        },
+        "showStatus": {
+          "type": "string",
+          "enum": ["ongoing", "complete", "upcoming"],
+          "description": "Production or release status"
+        },
+        "totalSeasons": {
+          "type": "number",
+          "description": "Total seasons if a TV show"
+        },
+        "totalEpisodes": {
+          "type": "number",
+          "description": "Total episodes count"
+        },
+        "genres": {
+          "type": "array",
+          "description": "List of genres"
+        },
+        "year": {
+          "type": "number",
+          "description": "Release year of the content"
+        },
+        "addedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp when added"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp when updated"
+        }
+      },
+      "required": ["id", "externalId", "type", "title", "status", "addedAt", "updatedAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "Stores user profile and theme setting preferences"
+    },
+    "/watchlist/{userId}/entries/{entryId}": {
+      "schema": "WatchlistEntry",
+      "description": "Sub-collection of watch entries for each individual user"
+    }
+  }
+}

@@ -1,0 +1,101 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Global Safety Net: Default deny everything
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper: Verify if user is signed in
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    // Helper: Verify ID complies with naming restrictions
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    // Helper: Validate User profile model integrity
+    function isValidUser(data) {
+      return data.uid == request.auth.uid &&
+             data.displayName is string && data.displayName.size() >= 1 && data.displayName.size() <= 100 &&
+             data.email is string && data.email.size() >= 3 && data.email.size() <= 128 &&
+             (data.photoURL == null || (data.photoURL is string && data.photoURL.size() <= 1000)) &&
+             data.theme in ['light', 'dark'] &&
+             data.createdAt is timestamp &&
+             data.updatedAt is timestamp;
+    }
+
+    // Helper: Validate Watchlist Entry entity integrity
+    function isValidWatchlistEntry(data) {
+      return data.id is string && data.id.size() <= 128 &&
+             data.externalId is string && data.externalId.size() >= 1 && data.externalId.size() <= 128 &&
+             data.type in ['anime', 'tv', 'movie'] &&
+             data.title is string && data.title.size() >= 1 && data.title.size() <= 500 &&
+             data.posterURL is string && data.posterURL.size() <= 1000 &&
+             data.status in ['planning', 'watching', 'paused', 'completed', 'dropped'] &&
+             (data.showStatus == null || (data.showStatus is string && data.showStatus.size() <= 100)) &&
+             (data.totalSeasons == null || data.totalSeasons is number) &&
+             (data.totalEpisodes == null || data.totalEpisodes is number) &&
+             data.genres is list && data.genres.size() <= 15 &&
+             (data.year == null || data.year is number) &&
+             data.addedAt is timestamp &&
+             data.updatedAt is timestamp;
+    }
+
+    // Match rules for the /users collection
+    match /users/{userId} {
+      allow get: if isSignedIn() && request.auth.uid == userId;
+      
+      // Clients may list user profiles only if they are query restricting to their own ID
+      allow list: if isSignedIn() && request.auth.uid == userId;
+
+      allow create: if isSignedIn() && 
+                    request.auth.uid == userId && 
+                    isValidId(userId) && 
+                    isValidUser(request.resource.data) && 
+                    request.resource.data.createdAt == request.time && 
+                    request.resource.data.updatedAt == request.time;
+
+      allow update: if isSignedIn() && 
+                    request.auth.uid == userId && 
+                    isValidUser(request.resource.data) &&
+                    request.resource.data.uid == resource.data.uid &&
+                    request.resource.data.createdAt == resource.data.createdAt &&
+                    request.resource.data.updatedAt == request.time &&
+                    request.resource.data.diff(resource.data).affectedKeys().hasOnly(['displayName', 'photoURL', 'theme', 'updatedAt']);
+
+      allow delete: if isSignedIn() && request.auth.uid == userId;
+    }
+
+    // Match rules for the watchlist entries sub-collection
+    match /watchlist/{userId}/entries/{entryId} {
+      allow get: if isSignedIn() && request.auth.uid == userId;
+      
+      // Explicitly enforce that lists can only be queried by the owner to prevent query hijacking
+      allow list: if isSignedIn() && request.auth.uid == userId;
+
+      allow create: if isSignedIn() && 
+                    request.auth.uid == userId && 
+                    isValidId(userId) && 
+                    isValidId(entryId) && 
+                    isValidWatchlistEntry(request.resource.data) &&
+                    request.resource.data.addedAt == request.time && 
+                    request.resource.data.updatedAt == request.time;
+
+      allow update: if isSignedIn() && 
+                    request.auth.uid == userId && 
+                    isValidWatchlistEntry(request.resource.data) &&
+                    request.resource.data.id == resource.data.id &&
+                    request.resource.data.externalId == resource.data.externalId &&
+                    request.resource.data.type == resource.data.type &&
+                    request.resource.data.addedAt == resource.data.addedAt &&
+                    request.resource.data.updatedAt == request.time &&
+                    request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'showStatus', 'totalSeasons', 'totalEpisodes', 'genres', 'year', 'updatedAt']);
+
+      allow delete: if isSignedIn() && request.auth.uid == userId;
+    }
+  }
+}
